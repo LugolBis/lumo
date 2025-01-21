@@ -236,6 +236,65 @@ else
 fi
 ```
 
+## Loop
+- While
+  ```Bash
+  lulu=10
+  while [ $lulu -ge 0 ]
+  do
+    echo $lulu
+    lulu=$(($lulu-1))
+  done
+  echo Happy new year !
+  ```
+- For <variable> in <iterable>
+  ```Bash
+  names=("Jean" "Bruno" "Hugo" "François")
+  for name in "${names[@]}"
+  do
+      echo "Hello $name"
+  done
+  ```
+- For index in <sequence>
+  ```Bash
+  for i in `seq 0 10`    # start:0 ; end:10 
+  do
+      echo Day $i
+  done
+  ```
+  ```Bash
+  for i in `seq 0 2 10`   # start:0 ; step:2 ; end:10 
+  do
+      echo Day $i
+  done
+  ```
+
+## Function
+> [!Caution]
+> In Bash, functions have no side effects, changes to a variable in the body of a function
+> directly affect the scope in which the function was called.
+> ```Bash
+> function ADD
+> {
+>   a=$((a+1))
+> }
+> a=5
+> echo $a  # Displays : 5
+> ADD      # Call the function 'ADD'
+> echo $a  # Displays : 6
+> ```
+<br>
+
+Function with arguments
+```Bash
+function add_numbers
+{
+  result=$(($1+$2))
+}
+add_numbers 5 2
+echo $result  # Displays : 7
+```
+
 ## I/O
 
 ### Read prompt data
