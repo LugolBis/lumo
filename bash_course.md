@@ -271,7 +271,7 @@ fi
 
 ## Function
 > [!Caution]
-> In Bash, functions have no side effects, changes to a variable in the body of a function
+> In Bash, functions have side effects, changes to a variable in the body of a function
 > directly affect the scope in which the function was called.
 > ```Bash
 > function ADD
