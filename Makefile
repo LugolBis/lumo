@@ -1,3 +1,3 @@
 "":
 	@chmod +x main.sh
-	@./main.sh
+	./main.sh $(arg)
