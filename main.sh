@@ -3,28 +3,28 @@
 clear
 
 # Initializing the automata from the file automata.txt
-declare -A AUTOMATE
+declare -A AUTOMATA
 {
-    read AUTOMATE["S"]
-    read AUTOMATE["Q"]
-    read AUTOMATE["Q0"]
-    read AUTOMATE["F"]
-    read AUTOMATE["T"]
+    read AUTOMATA["S"]
+    read AUTOMATA["Q"]
+    read AUTOMATA["Q0"]
+    read AUTOMATA["F"]
+    read AUTOMATA["T"]
 } < automata.txt
 
 function display
 {
-    echo ${AUTOMATE["S"]}
-    echo ${AUTOMATE["Q"]}
-    echo ${AUTOMATE["Q0"]}
-    echo ${AUTOMATE["F"]}
-    echo ${AUTOMATE["T"]} 
+    echo Alphabet : ${AUTOMATA["S"]}
+    echo States : ${AUTOMATA["Q"]}
+    echo Initial state : ${AUTOMATA["Q0"]}
+    echo Finals state : ${AUTOMATA["F"]}
+    echo Transitions : ${AUTOMATA["T"]} 
 }
 
 function delete_epsilon
 {
-    IFS=" " read -ra nodes <<< ${AUTOMATE["Q"]}
-    N=$(($(echo "${AUTOMATE["Q"]}" | grep -o " " | wc -l)+1))
+    IFS=" " read -ra nodes <<< ${AUTOMATA["Q"]}
+    N=$(($(echo "${AUTOMATA["Q"]}" | grep -o " " | wc -l)+1))
 
     # Initializing a matrix of the epsilon path
     matrix=()
@@ -34,7 +34,7 @@ function delete_epsilon
 
     for ((i=0; i<N; i++)); do
         for ((j=0; j<N; j++)); do
-            for transition in ${AUTOMATE["T"]}
+            for transition in ${AUTOMATA["T"]}
             do
                 IFS='-' read -r node1 lt node2 <<< "$transition"
                 if [ $node1 = ${nodes[$((i))]} ] && [ $node2 = ${nodes[$((j))]} ] && [ $lt = "epsilon" ]
@@ -47,12 +47,9 @@ function delete_epsilon
     done
 
     # Find all the epsilon path
-    for i in `seq 0 $((N-1))`
-    do
-        for j in `seq 0 $((N-1))`
-        do
-            for k in `seq 0 $((N-1))`
-            do
+    for ((i=0; i<N; i++)); do
+        for ((j=0; j<N; j++)); do
+            for ((k=0; k<N; k++)); do
                 if [ ${matrix[$(($k * $N + $j))]} = "1" ] && [ ${matrix[$(($i * $N + $k))]} = "1" ]
                 then
                     matrix[$(($i * $N + $j))]="1"
@@ -61,19 +58,40 @@ function delete_epsilon
         done
     done
 
-    for i in `seq 0 $((N-1))`
-    do
-        echo ${nodes[$(($i))]}
+    local new_transitions=""
+    for ((i=0; i<N; i++)); do
+        for ((j=0; j<N; j++)); do
+            if [ ${matrix[$(($i * $N + $j))]} = "1" ] && [ $i != $j ]
+            then
+                nodeA=${nodes[$i]}
+                nodeB=${nodes[$j]}
+                for transition in ${AUTOMATA["T"]}; do
+                    IFS='-' read -r node1 lt node2 <<< "$transition"
+                    if [ $node1 = $nodeB ] && [ $lt != "epsilon" ]
+                    then
+                        new_transitions="$new_transitions $nodeA-$lt-$node2"
+                    fi
+                done
+            fi
+        done
+    done
+    
+    for transition in ${AUTOMATA["T"]}; do
+        IFS='-' read -r node1 lt node2 <<< "$transition"
+        if [ $lt != "epsilon" ]
+        then
+            new_transitions="$new_transitions $node1-$lt-$node2"
+        fi
     done
 
-    # Not complete
+    AUTOMATA["T"]=$new_transitions
 }
 
 function check_word
 {
     # This function check if a word is recognized by a DFA
     state=0
-    current_node=${AUTOMATE["Q0"]}
+    current_node=${AUTOMATA["Q0"]}
     word=$1 ; word_save=$1
     while [ ${#word} -ne 0 ] && [ $state -eq 0 ]
     do
@@ -81,7 +99,7 @@ function check_word
         letter="${word:0:1}"
         word="${word:1}"
 
-        for transition in ${AUTOMATE["T"]}
+        for transition in ${AUTOMATA["T"]}
         do
             IFS='-' read -r node1 lt node2 <<< "$transition"
             if [ $node1 = $current_node ] && [ $lt = $letter ]
@@ -95,7 +113,7 @@ function check_word
 
     if [ ${#word} -eq 0 ]
     then
-        for node in ${AUTOMATE["F"]}
+        for node in ${AUTOMATA["F"]}
         do
             if [ $current_node = $node ]
             then
@@ -110,7 +128,8 @@ function check_word
 }
 
 delete_epsilon
-
+display
+echo
 check_word $1
 
 # chmod +x main.sh
