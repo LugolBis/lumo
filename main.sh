@@ -72,6 +72,9 @@ function delete_epsilon
                         new_transitions="$new_transitions $nodeA-$lt-$node2"
                     fi
                 done
+                if [ $(($(echo ${AUTOMATA["F"]} | egrep -o "$nodeB" | wc -l))) -gt 0 ] && [ $(($(echo ${AUTOMATA["F"]} | egrep -o "$nodeA" | wc -l))) -eq 0 ]; then
+                    AUTOMATA["F"]="${AUTOMATA["F"]} $nodeA"
+                fi
             fi
         done
     done
@@ -85,6 +88,72 @@ function delete_epsilon
     done
 
     AUTOMATA["T"]=$new_transitions
+}
+
+function determine
+{
+    alphabet=()
+    for letter in ${AUTOMATA["S"]}; do
+        if [ $(($(echo ${AUTOMATA["T"]} | egrep -o "\-$letter\-" | wc -l))) -gt 0 ]; then
+            alphabet+=($letter)
+        fi
+    done
+
+    # Initializing the successor of each node by each letter
+    declare -A successor
+    for node in ${AUTOMATA["Q"]}; do
+        for letter in ${alphabet[*]}; do
+            successor["$node-$letter"]=""
+        done
+    done
+    for transition in ${AUTOMATA["T"]}; do
+        IFS='-' read -r node1 lt node2 <<< "$transition"
+        successor["$node1-$lt"]="${successor["$node1-$lt"]} $node2"
+    done
+    
+    Q_=${AUTOMATA["Q0"]} ; F_=${AUTOMATA["F"]} ; T_=""
+    IFS=" " read -ra stack <<< $Q_
+    while [ $((${#stack})) -gt 0 ]; do
+        for node in $stack; do
+            for letter in ${alphabet[*]}; do
+                currentS=""
+                IFS=";" read -ra distinctN <<< $node
+                for n in ${distinctN[*]}; do
+                    IFS=" " read -ra distinctS <<< ${successor["$n-$letter"]}
+                    for s in ${distinctS[*]}; do
+                        if [ $(($(echo $currentS | egrep -o "$s" | wc -l))) -eq 0 ]; then
+                            currentS="$currentS $s"
+                        fi
+                    done
+                done
+                new_node=$(echo "${currentS:1}" | tr ' ' ';')
+                if [ "$new_node" != "" ]; then
+                    T_="$T_ $node-$letter-$new_node"
+                fi
+                if [[ ! "$Q_" =~ (^| )"$new_node"( |$) ]]; then
+                    Q_="$Q_ $new_node"
+                    stack+=($new_node)
+                fi
+                #if [[ ! "$F_" =~ (^| )"$new_node"( |$) ]]; then 
+                #    F_="$F_ $new_node"
+                #fi
+                for n__ in ${distinctN[*]}; do
+                    
+                    if [ $(($(echo $F_ | egrep -o "$n__" | wc -l))) -gt 0 ] && [ $(($(echo $F_ | egrep -o "$node" | wc -l))) -eq 0 ]; then
+                        F_="$F_ $node"
+                        break
+                    fi
+                    
+                done
+            done
+            stack=("${stack[@]:1}")
+            break
+        done
+    done
+
+    AUTOMATA["Q"]=$Q_
+    AUTOMATA["F"]=$F_
+    AUTOMATA["T"]=$T_
 }
 
 function check_word
@@ -128,6 +197,7 @@ function check_word
 }
 
 delete_epsilon
+determine
 display
 echo
 check_word $1
