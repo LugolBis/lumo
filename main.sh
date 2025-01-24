@@ -212,8 +212,10 @@ function check_word
     fi
 }
 
-delete_epsilon
-determine
+{
+   delete_epsilon
+    determine 
+} > /dev/null 2>&1
 display
 echo
 check_word $1
