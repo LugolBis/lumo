@@ -2,15 +2,31 @@
 
 clear
 
-# Initializing the automata from the file automata.txt
-declare -A AUTOMATA
-{
-    read AUTOMATA["S"]
-    read AUTOMATA["Q"]
-    read AUTOMATA["Q0"]
-    read AUTOMATA["F"]
-    read AUTOMATA["T"]
-} < automata.txt
+if [ $1 = "--help" ]; then
+    echo "Usage : lumo <YOUR_WORD> <AUTOMATA_PATH>"
+    echo "Note : The second argument is optional, the default automata used is in the repository."
+    exit 0
+fi
+
+if [ "$#" = "2" ]; then
+    declare -A AUTOMATA
+    {
+        read AUTOMATA["S"]
+        read AUTOMATA["Q"]
+        read AUTOMATA["Q0"]
+        read AUTOMATA["F"]
+        read AUTOMATA["T"]
+    } < $2
+else
+    declare -A AUTOMATA
+    {
+        read AUTOMATA["S"]
+        read AUTOMATA["Q"]
+        read AUTOMATA["Q0"]
+        read AUTOMATA["F"]
+        read AUTOMATA["T"]
+    } < automata.txt
+fi
 
 function display
 {
