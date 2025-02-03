@@ -296,21 +296,18 @@ function run
         read AUTOMATA["F"]
         read AUTOMATA["T"]
     } < $in
-
-    delete_epsilon
-    determine
     
     if [ "$union" != "" ]; then
         union $union
-        delete_epsilon
-        determine
     fi
+
+    delete_epsilon
+    determine
+    complete
 
     if [ "$comp" = "YES" ]; then
         complementary
     fi
-
-    complete
 
     if [ "$out" != "" ]; then
         save $out
